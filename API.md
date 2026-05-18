@@ -84,8 +84,8 @@ curl -X POST "https://домен.ру/local/modules/avs_booking/api.php?action=c
 
 ### 2. Обновление статуса заказа (update_status)
 
-Метод: `bash POST или PUT `
-URL: `bash ?action=update_status `
+Метод: `POST или PUT`
+URL: `?action=update_status`
 
 #### Параметры запроса
 
@@ -97,7 +97,7 @@ URL: `bash ?action=update_status `
 
 \*Достаточно указать либо order_id, либо order_number
 
-Допустимые статусы: `bash pending, paid, confirmed, cancelled, completed`
+Допустимые статусы: `pending, paid, confirmed, cancelled, completed`
 
 Пример запроса
 
@@ -127,8 +127,8 @@ curl -X POST "https://домен.ру/local/modules/avs_booking/api.php?action=u
 
 ### 3. Изменение заказа (update_order)
 
-Метод: `bash POST или PUT `
-URL: `bash ?action=update_order `
+Метод: `POST или PUT`
+URL: `?action=update_order`
 
 #### Параметры запроса
 
@@ -189,8 +189,8 @@ curl -X POST "https://домен.ру/local/modules/avs_booking/api.php?action=u
 
 ### 4. Получение списка заказов (get_orders)
 
-Метод: `bash GET`
-URL: `bash ?action=get_orders`
+Метод: `GET`
+URL: `?action=get_orders`
 
 #### Параметры запроса
 
@@ -249,8 +249,8 @@ curl -X GET "https://домен.ру/local/modules/avs_booking/api.php?action=ge
 
 ### 5. Получение информации об оплате (get_payment_info)
 
-Метод: `bash GET`
-URL: `bash ?action=get_payment_info`
+Метод: `GET`
+URL: `?action=get_payment_info`
 
 #### Параметры запроса
 
@@ -291,8 +291,8 @@ curl -X GET "https://домен.ру/local/modules/avs*booking/api.php?action=ge
 
 ### 6. Обновление цен беседок (update_prices)
 
-Метод: `bash POST` или `bash PUT`
-URL: `bash ?action=update_prices`
+Метод: `POST` или `PUT`
+URL: `?action=update_prices`
 
 #### Параметры запроса
 
