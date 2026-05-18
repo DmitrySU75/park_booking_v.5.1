@@ -97,10 +97,11 @@ URL: `bash ?action=update_status `
 
 \*Достаточно указать либо order_id, либо order_number
 
-Допустимые статусы: pending, paid, confirmed, cancelled, completed
+Допустимые статусы: `bash pending, paid, confirmed, cancelled, completed`
 
 Пример запроса
-bash
+
+```bash
 curl -X POST "https://park.na4u.ru/local/modules/avs_booking/api.php?action=update_status" \
  -H "X-API-Key: ваш_ключ" \
  -H "Content-Type: application/json" \
@@ -118,21 +119,28 @@ json
 "old_status": "pending",
 "new_status": "confirmed"
 }
-} 3. Изменение заказа (update_order)
-Метод: POST или PUT
-URL: ?action=update_order
+}
+```
 
-Параметры запроса
-Параметр Тип Обязательный Описание
-order_id int Да* ID заказа
-order_number string Да* Номер заказа
-new_start_time string Нет Новое время начала
-new_end_time string Нет Новое время окончания
-new_pavilion_id int Нет Новая беседка
-\*Достаточно указать либо order_id, либо order_number
+### 3. Изменение заказа (update_order)
 
-Пример запроса (изменение времени)
-bash
+Метод: `bash POST или PUT `
+URL: `bash ?action=update_order `
+
+#### Параметры запроса
+
+| Параметр                                              | Тип    | Обязательный | Описание              |
+| ----------------------------------------------------- | ------ | ------------ | --------------------- |
+| order_id                                              | int    | Да\*         | ID заказа             |
+| order_number                                          | string | Да\*         | Номер заказа          |
+| new_start_time                                        | string | Нет          | Новое время начала    |
+| new_end_time                                          | string | Нет          | Новое время окончания |
+| new_pavilion_id                                       | int    | Нет          | Новая беседка         |
+| \*Достаточно указать либо order_id, либо order_number |
+
+#### Пример запроса (изменение времени)
+
+```bash
 curl -X POST "https://park.na4u.ru/local/modules/avs_booking/api.php?action=update_order" \
  -H "X-API-Key: ваш*ключ" \
  -H "Content-Type: application/json" \
@@ -141,33 +149,43 @@ curl -X POST "https://park.na4u.ru/local/modules/avs_booking/api.php?action=upda
 "new_start_time": "2026-05-21T15:00:00+05:00",
 "new_end_time": "2026-05-21T19:00:00+05:00"
 }'
-Пример запроса (смена беседки)
-bash
+```
+
+#### Пример запроса (смена беседки)
+
+```bash
 curl -X POST "https://park.na4u.ru/local/modules/avs_booking/api.php?action=update_order" \
  -H "X-API-Key: ваш*ключ" \
  -H "Content-Type: application/json" \
  -d '{
 "order_number": "ORD-20260520123456-7890",
 "new_pavilion_id": 117
-}'
-Пример ответа
-json
+}
+```
+
+#### Пример ответа
+
+```json
 {
-"success": true,
-"data": {
-"order_id": 123,
-"order_number": "ORD-20260520123456-7890",
-"changes": {
-"time": {
-"old_start": "2026-05-20T10:00:00+05:00",
-"old_end": "2026-05-20T14:00:00+05:00",
-"new_start": "2026-05-21T15:00:00+05:00",
-"new_end": "2026-05-21T19:00:00+05:00"
+  "success": true,
+  "data": {
+    "order_id": 123,
+    "order_number": "ORD-20260520123456-7890",
+    "changes": {
+      "time": {
+        "old_start": "2026-05-20T10:00:00+05:00",
+        "old_end": "2026-05-20T14:00:00+05:00",
+        "new_start": "2026-05-21T15:00:00+05:00",
+        "new_end": "2026-05-21T19:00:00+05:00"
+      }
+    },
+    "status": "pending"
+  }
 }
-},
-"status": "pending"
-}
-} 4. Получение списка заказов (get_orders)
+```
+
+#### 4. Получение списка заказов (get_orders)
+
 Метод: GET
 URL: ?action=get_orders
 
