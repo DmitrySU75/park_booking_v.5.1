@@ -109,16 +109,19 @@ curl -X POST "https://домен.ру/local/modules/avs_booking/api.php?action=u
 "order_number": "ORD-20260520123456-7890",
 "status": "confirmed"
 }'
+```
+
 Пример ответа
-json
+
+```json
 {
-"success": true,
-"data": {
-"order_id": 123,
-"order_number": "ORD-20260520123456-7890",
-"old_status": "pending",
-"new_status": "confirmed"
-}
+  "success": true,
+  "data": {
+    "order_id": 123,
+    "order_number": "ORD-20260520123456-7890",
+    "old_status": "pending",
+    "new_status": "confirmed"
+  }
 }
 ```
 
