@@ -42,7 +42,7 @@ API-ключ настраивается в модуле: **Настройки** 
 #### Пример запроса (cURL)
 
 ```bash
-curl -X POST "https://park.na4u.ru/local/modules/avs_booking/api.php?action=create_order" \
+curl -X POST "https://домен.ру/local/modules/avs_booking/api.php?action=create_order" \
   -H "X-API-Key: ваш_ключ" \
   -H "Content-Type: application/json" \
   -d '{
@@ -102,7 +102,7 @@ URL: `bash ?action=update_status `
 Пример запроса
 
 ```bash
-curl -X POST "https://park.na4u.ru/local/modules/avs_booking/api.php?action=update_status" \
+curl -X POST "https://домен.ру/local/modules/avs_booking/api.php?action=update_status" \
  -H "X-API-Key: ваш_ключ" \
  -H "Content-Type: application/json" \
  -d '{
@@ -141,7 +141,7 @@ URL: `bash ?action=update_order `
 #### Пример запроса (изменение времени)
 
 ```bash
-curl -X POST "https://park.na4u.ru/local/modules/avs_booking/api.php?action=update_order" \
+curl -X POST "https://домен.ру/local/modules/avs_booking/api.php?action=update_order" \
  -H "X-API-Key: ваш*ключ" \
  -H "Content-Type: application/json" \
  -d '{
@@ -154,7 +154,7 @@ curl -X POST "https://park.na4u.ru/local/modules/avs_booking/api.php?action=upda
 #### Пример запроса (смена беседки)
 
 ```bash
-curl -X POST "https://park.na4u.ru/local/modules/avs_booking/api.php?action=update_order" \
+curl -X POST "https://домен.ру/local/modules/avs_booking/api.php?action=update_order" \
  -H "X-API-Key: ваш*ключ" \
  -H "Content-Type: application/json" \
  -d '{
@@ -184,88 +184,110 @@ curl -X POST "https://park.na4u.ru/local/modules/avs_booking/api.php?action=upda
 }
 ```
 
-#### 4. Получение списка заказов (get_orders)
+### 4. Получение списка заказов (get_orders)
 
-Метод: GET
-URL: ?action=get_orders
+Метод: `bash GET`
+URL: `bash ?action=get_orders`
 
-Параметры запроса
-Параметр Тип Обязательный Описание
-start*date string Да Начало периода (YYYY-MM-DD)
-end_date string Да Конец периода (YYYY-MM-DD)
-status string Нет Фильтр по статусу
-pavilion_id int Нет Фильтр по беседке
-legal_entity string Нет Фильтр по юр. лицу
-Пример запроса
-bash
-curl -X GET "https://park.na4u.ru/local/modules/avs_booking/api.php?action=get_orders&start_date=2026-05-01&end_date=2026-05-31&status=paid" \
+#### Параметры запроса
+
+| Параметр     | Тип    | Обязательный | Описание                    |
+| ------------ | ------ | ------------ | --------------------------- |
+| start\*date  | string | Да           | Начало периода (YYYY-MM-DD) |
+| end_date     | string | Да           | Конец периода (YYYY-MM-DD)  |
+| status       | string | Нет          | Фильтр по статусу           |
+| pavilion_id  | int    | Нет          | Фильтр по беседке           |
+| legal_entity | string | Нет          | Фильтр по юр. лицу          |
+
+#### Пример запроса
+
+```bash
+curl -X GET "https://домен.ру/local/modules/avs_booking/api.php?action=get_orders&start_date=2026-05-01&end_date=2026-05-31&status=paid" \
  -H "X-API-Key: ваш*ключ"
-Пример ответа
-json
-{
-"success": true,
-"data": {
-"orders": [
-{
-"id": 123,
-"order_number": "ORD-20260520123456-7890",
-"pavilion_id": 116,
-"pavilion_name": "Беседка №38 Шарташ",
-"legal_entity": "beton_systems",
-"client_name": "Иван Петров",
-"client_phone": "+7 900 123-45-67",
-"client_email": "ivan@example.com",
-"period_start": "2026-05-20T10:00:00+05:00",
-"period_end": "2026-05-20T14:00:00+05:00",
-"price": 3800,
-"deposit_amount": 2000,
-"paid_amount": 2000,
-"status": "paid",
-"payment_status": "succeeded",
-"rental_type": "hourly",
-"duration_hours": 4,
-"created_at": "2026-05-20T10:30:00+05:00",
-"updated_at": "2026-05-20T10:35:00+05:00"
-}
-],
-"total": 1,
-"period": {
-"start": "2026-05-01",
-"end": "2026-05-31"
-}
-}
-} 5. Получение информации об оплате (get_payment_info)
-Метод: GET
-URL: ?action=get_payment_info
+```
 
-Параметры запроса
-Параметр Тип Обязательный Описание
-order_id int Да* ID заказа
-order_number string Да* Номер заказа
+#### Пример ответа
+
+```json
+{
+  "success": true,
+  "data": {
+    "orders": [
+      {
+        "id": 123,
+        "order_number": "ORD-20260520123456-7890",
+        "pavilion_id": 116,
+        "pavilion_name": "Беседка №38 Шарташ",
+        "legal_entity": "beton_systems",
+        "client_name": "Иван Петров",
+        "client_phone": "+7 900 123-45-67",
+        "client_email": "ivan@example.com",
+        "period_start": "2026-05-20T10:00:00+05:00",
+        "period_end": "2026-05-20T14:00:00+05:00",
+        "price": 3800,
+        "deposit_amount": 2000,
+        "paid_amount": 2000,
+        "status": "paid",
+        "payment_status": "succeeded",
+        "rental_type": "hourly",
+        "duration_hours": 4,
+        "created_at": "2026-05-20T10:30:00+05:00",
+        "updated_at": "2026-05-20T10:35:00+05:00"
+      }
+    ],
+    "total": 1,
+    "period": {
+      "start": "2026-05-01",
+      "end": "2026-05-31"
+    }
+  }
+}
+```
+
+### 5. Получение информации об оплате (get_payment_info)
+
+Метод: `bash GET`
+URL: `bash ?action=get_payment_info`
+
+#### Параметры запроса
+
+| Параметр     | Тип    | Обязательный | Описание     |
+| ------------ | ------ | ------------ | ------------ |
+| order_id     | int    | Да\*         | ID заказа    |
+| order_number | string | Да\*         | Номер заказа |
+
 \*Достаточно указать либо order_id, либо order_number
 
-Пример запроса
-bash
-curl -X GET "https://park.na4u.ru/local/modules/avs_booking/api.php?action=get_payment_info&order_number=ORD-20260520123456-7890" \
- -H "X-API-Key: ваш_ключ"
-Пример ответа
-json
+#### Пример запроса
+
+```bash
+curl -X GET "https://домен.ру/local/modules/avs*booking/api.php?action=get_payment_info&order_number=ORD-20260520123456-7890" \
+ -H "X-API-Key: ваш*ключ"
+```
+
+#### Пример ответа
+
+```json
 {
-"success": true,
-"data": {
-"order_id": 123,
-"order_number": "ORD-20260520123456-7890",
-"pavilion_name": "Беседка №38 Шарташ",
-"price": 3800,
-"deposit_amount": 2000,
-"paid_amount": 2000,
-"payment_id": "2def0b6b-000f-5000-9000-1c6a6b86b2a4",
-"payment_status": "succeeded",
-"legal_entity": "beton_systems",
-"status": "paid",
-"requires_payment": false
+  "success": true,
+  "data": {
+    "order_id": 123,
+    "order_number": "ORD-20260520123456-7890",
+    "pavilion_name": "Беседка №38 Шарташ",
+    "price": 3800,
+    "deposit_amount": 2000,
+    "paid_amount": 2000,
+    "payment_id": "2def0b6b-000f-5000-9000-1c6a6b86b2a4",
+    "payment_status": "succeeded",
+    "legal_entity": "beton_systems",
+    "status": "paid",
+    "requires_payment": false
+  }
 }
-} 6. Обновление цен беседок (update_prices)
+```
+
+### 6. Обновление цен беседок (update_prices)
+
 Метод: POST или PUT
 URL: ?action=update_prices
 
@@ -281,7 +303,7 @@ price_day float Нет Цена за день
 price_night float Нет Цена за ночь
 Пример запроса
 bash
-curl -X POST "https://park.na4u.ru/local/modules/avs_booking/api.php?action=update_prices" \
+curl -X POST "https://домен.ру/local/modules/avs_booking/api.php?action=update_prices" \
  -H "X-API-Key: ваш*ключ" \
  -H "Content-Type: application/json" \
  -d '{
