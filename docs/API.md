@@ -317,21 +317,21 @@ curl -X POST "https://домен.ру/local/modules/avs_booking/api.php?action=u
  -H "X-API-Key: ваш*ключ" \
  -H "Content-Type: application/json" \
  -d '{
-"effective_from": "2026-06-01",
-"prices": [
-{
-"pavilion_id": 116,
-"price_hour": 1100,
-"price_day": 9900,
-"price_night": 4200
-},
-{
-"pavilion_id": 117,
-"price_hour": 1200,
-"price_day": 10900
-}
-]
-}
+    "effective_from": "2026-06-01",
+    "prices": [
+        {
+        "pavilion_id": 116,
+        "price_hour": 1100,
+        "price_day": 9900,
+        "price_night": 4200
+        },
+        {
+        "pavilion_id": 117,
+        "price_hour": 1200,
+        "price_day": 10900
+        }
+    ]
+  }
 ```
 
 #### Пример ответа
