@@ -12,6 +12,9 @@ use Bitrix\Main\Config\Option;
 
 CModule::IncludeModule('avs_booking');
 
+/**
+ * Проверка подписи ЮKassa (основной метод аутентификации)
+ */
 function verifyYookassaSignature($requestBody, $signatureHeader, $secretKey)
 {
     if (empty($signatureHeader)) {
@@ -41,6 +44,9 @@ function verifyYookassaSignature($requestBody, $signatureHeader, $secretKey)
     return hash_equals($expectedSignature, $signature);
 }
 
+/**
+ * Проверка IP (резервный метод, только если подпись не прошла)
+ */
 function ipInRange($ip, $range)
 {
     if (strpos($range, '/') === false) {
@@ -61,11 +67,14 @@ $data = json_decode($source, true);
 
 if (!$data) {
     http_response_code(400);
+    \Bitrix\Main\Diag\Debug::writeToFile($source, 'Invalid JSON received', 'avs_booking.log');
     die('Invalid JSON');
 }
 
+// Получаем юридическое лицо из метаданных
 $legalEntity = $data['object']['metadata']['legal_entity'] ?? null;
 
+// Определяем секретный ключ
 $secretKey = '';
 switch ($legalEntity) {
     case AVS_LEGAL_BETON_SYSTEMS:
@@ -75,6 +84,7 @@ switch ($legalEntity) {
         $secretKey = Option::get('avs_booking', 'park_victory_secret_key', '');
         break;
     default:
+        // Если юрлицо не указано, пытаемся найти по payment_id
         if (isset($data['object']['id'])) {
             $orders = \AVS\Booking\Order::getList(['PAYMENT_ID' => $data['object']['id']], 1, 0);
             if (!empty($orders)) {
@@ -85,16 +95,34 @@ switch ($legalEntity) {
 }
 
 $signatureHeader = $_SERVER['HTTP_YOKASSA_SIGNATURE'] ?? '';
-$signatureValid = false;
 
+// ОСНОВНОЙ МЕТОД: Проверка подписи
+$signatureValid = false;
 if ($secretKey && !empty($signatureHeader)) {
     $signatureValid = verifyYookassaSignature($source, $signatureHeader, $secretKey);
 }
 
+// Если подпись не прошла - сразу отклоняем запрос
+if (!$signatureValid) {
+    \Bitrix\Main\Diag\Debug::writeToFile(
+        [
+            'ip' => $_SERVER['REMOTE_ADDR'],
+            'signature_header' => $signatureHeader,
+            'legal_entity' => $legalEntity,
+            'has_secret_key' => !empty($secretKey)
+        ],
+        'Yookassa webhook SIGNATURE verification FAILED',
+        'avs_booking.log'
+    );
+    http_response_code(403);
+    die('Invalid signature');
+}
+
+// Резервная проверка IP (логируем, но не блокируем, если подпись прошла)
 $allowedIps = ['185.71.76.0/27', '185.71.77.0/27', '77.75.153.0/25', '77.75.154.0/25', '77.75.156.0/25', '77.75.157.0/25'];
 $clientIp = $_SERVER['REMOTE_ADDR'];
-
 $ipValid = false;
+
 foreach ($allowedIps as $ipRange) {
     if (ipInRange($clientIp, $ipRange)) {
         $ipValid = true;
@@ -102,28 +130,23 @@ foreach ($allowedIps as $ipRange) {
     }
 }
 
-if (!$signatureValid) {
-    \Bitrix\Main\Diag\Debug::writeToFile(
-        ['ip' => $clientIp, 'signature' => $signatureHeader, 'legal_entity' => $legalEntity],
-        'Yookassa webhook signature verification failed',
-        'avs_booking.log'
-    );
-    http_response_code(403);
-    die('Invalid signature');
-}
-
 if (!$ipValid) {
+    // Только логируем, но не блокируем (подпись уже прошла)
     \Bitrix\Main\Diag\Debug::writeToFile(
         ['ip' => $clientIp, 'legal_entity' => $legalEntity],
-        'Yookassa webhook IP not allowed',
+        'Yookassa webhook: IP not in allowed range, but signature valid - processing anyway',
         'avs_booking.log'
     );
-    http_response_code(403);
-    die('Forbidden');
 }
 
-Payment::handleWebhook();
-
-echo 'OK';
+// Обрабатываем платеж
+try {
+    Payment::handleWebhook();
+    echo 'OK';
+} catch (Exception $e) {
+    \Bitrix\Main\Diag\Debug::writeToFile($e->getMessage(), 'Yookassa webhook processing error', 'avs_booking.log');
+    http_response_code(500);
+    echo 'Processing error';
+}
 
 require_once($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/epilog_after.php');

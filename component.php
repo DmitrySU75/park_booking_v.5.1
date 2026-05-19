@@ -36,6 +36,8 @@ if ($request->isPost() && check_bitrix_sessid()) {
     $discountCode = trim($request->getPost('discount_code'));
 
     $errors = [];
+    $reservationId = null; // Для отката при ошибке
+    $client = null;
 
     if (empty($clientName)) $errors[] = 'Введите имя';
     if (empty($clientPhone)) $errors[] = 'Введите телефон';
@@ -87,7 +89,8 @@ if ($request->isPost() && check_bitrix_sessid()) {
                         'discount_code' => $discountCode
                     ];
 
-                    $reservationId = null;
+                    // ШАГ 1: Создаем бронирование в LibreBooking
+                    $reservationCreated = false;
                     if ($gazebo['resource_id']) {
                         $userData = [
                             'name' => $clientName,
@@ -97,27 +100,64 @@ if ($request->isPost() && check_bitrix_sessid()) {
                             'comment' => $comment
                         ];
                         try {
-                            $client = new AVSBookingLibreBookingClient();
+                            if (!$client) {
+                                $client = new AVSBookingLibreBookingClient();
+                            }
                             $reservationId = $client->createReservation($gazebo['resource_id'], $timeRange['start'], $timeRange['end'], $userData);
+                            if ($reservationId) {
+                                $reservationCreated = true;
+                                $bookingData['librebooking_id'] = $reservationId;
+                            } else {
+                                $errors[] = 'Не удалось создать бронирование в системе';
+                            }
                         } catch (Exception $e) {
                             $errors[] = 'Ошибка создания бронирования: ' . $e->getMessage();
                         }
+                    } else {
+                        // Если нет resource_id, считаем что бронирование создано "виртуально"
+                        $reservationCreated = true;
                     }
 
-                    if ($reservationId || !$gazebo['resource_id']) {
-                        if ($reservationId) {
-                            $bookingData['librebooking_id'] = $reservationId;
-                        }
-
+                    // ШАГ 2: Если бронь в LibreBooking создана - создаем заказ в Битрикс
+                    if ($reservationCreated) {
                         $orderId = AVSBookingModule::createOrder($bookingData);
 
                         if ($orderId) {
+                            // Успех - редирект
                             LocalRedirect($arParams['SUCCESS_PAGE'] . '?order_id=' . $orderId);
                         } else {
-                            $errors[] = 'Ошибка создания заказа';
+                            // ОШИБКА: заказ в Битрикс не создался, нужно откатить бронь в LibreBooking
+                            $errors[] = 'Ошибка создания заказа в системе';
+
+                            // Откатываем бронирование в LibreBooking, если оно было создано
+                            if ($reservationId && $gazebo['resource_id']) {
+                                try {
+                                    if (!$client) {
+                                        $client = new AVSBookingLibreBookingClient();
+                                    }
+                                    $cancelled = $client->cancelReservation($reservationId);
+                                    if ($cancelled) {
+                                        \Bitrix\Main\Diag\Debug::writeToFile(
+                                            ['reservation_id' => $reservationId, 'order_data' => $bookingData],
+                                            'Rollback: LibreBooking reservation cancelled due to order creation failure',
+                                            'avs_booking.log'
+                                        );
+                                    } else {
+                                        \Bitrix\Main\Diag\Debug::writeToFile(
+                                            ['reservation_id' => $reservationId],
+                                            'CRITICAL: Failed to cancel LibreBooking reservation during rollback',
+                                            'avs_booking.log'
+                                        );
+                                    }
+                                } catch (Exception $rollbackError) {
+                                    \Bitrix\Main\Diag\Debug::writeToFile(
+                                        ['error' => $rollbackError->getMessage(), 'reservation_id' => $reservationId],
+                                        'CRITICAL: Rollback exception',
+                                        'avs_booking.log'
+                                    );
+                                }
+                            }
                         }
-                    } else {
-                        $errors[] = 'Ошибка создания бронирования в системе';
                     }
                 } else {
                     $errors[] = 'Выбранное время уже занято';
