@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Файл: /install/auto_installer.php
  * Автоматический установщик AVS Booking
@@ -12,32 +13,32 @@
 
 $config = [
     // Пути
-    'project_root' => '/var/www/html',
-    'bitrix_root' => '/var/www/html/bitrix',
-    'booking_path' => '/booking',
-    
+    'project_root' => '/home/avsdevelopment2/park.na4u.ru/www',
+    'bitrix_root' => '/home/avsdevelopment2/park.na4u.ru/www/bitrix',
+    'booking_path' => '/home/avsdevelopment2/park.na4u.ru/booking',
+
     // База данных LibreBooking
     'db_host' => 'localhost',
-    'db_name' => 'librebooking',
-    'db_user' => 'librebooking_user',
-    'db_password' => 'change_this_password',
-    
+    'db_name' => 'vpark-litepms',
+    'db_user' => 'vpark1',
+    'db_password' => 'hq46jB7&',
+
     // LibreBooking API пользователь
     'api_username' => 'api_user',
-    'api_password' => 'change_api_password',
-    
+    'api_password' => '^ti*54gjnI',
+
     // Основные настройки времени
     'timezone' => 'Asia/Yekaterinburg',
     'language' => 'ru_RU',
-    
+
     // URL сайта
-    'site_url' => 'https://your-domain.ru',
-    
+    'site_url' => 'https://park.na4u.ru',
+
     // Соль для шифрования (сгенерируется автоматически, если не указана)
     'salt' => '',
-    
+
     // Пароль установщика LibreBooking
-    'install_password' => 'install_temp_password'
+    'install_password' => '^ti*54gjnI'
 ];
 
 // ============================================
@@ -59,56 +60,56 @@ class AVSBookingAutoInstaller
         'reset' => "\033[0m",
         'bold' => "\033[1m"
     ];
-    
+
     public function __construct($config)
     {
         $this->config = $config;
-        
+
         // Генерация соли, если не указана
         if (empty($this->config['salt'])) {
             $this->config['salt'] = bin2hex(random_bytes(32));
         }
     }
-    
+
     public function run()
     {
         $this->printBanner();
-        
+
         // Проверка прав на запись
         if (!$this->checkPermissions()) {
             $this->logError("Недостаточно прав для установки. Запустите скрипт с правами root или от пользователя веб-сервера.", true);
         }
-        
+
         // Шаг 1: Проверка PHP окружения
         $this->step++;
         $this->log("Шаг {$this->step}/{$this->totalSteps}: Проверка PHP окружения...", 'blue');
         $this->checkPhpEnvironment();
-        
+
         // Шаг 2: Установка LibreBooking
         $this->step++;
         $this->log("Шаг {$this->step}/{$this->totalSteps}: Установка LibreBooking...", 'blue');
         $this->installLibreBooking();
-        
+
         // Шаг 3: Настройка LibreBooking
         $this->step++;
         $this->log("Шаг {$this->step}/{$this->totalSteps}: Настройка LibreBooking...", 'blue');
         $this->configureLibreBooking();
-        
+
         // Шаг 4: Установка модуля AVS Booking в Битрикс
         $this->step++;
         $this->log("Шаг {$this->step}/{$this->totalSteps}: Установка модуля AVS Booking...", 'blue');
         $this->installAVSBookingModule();
-        
+
         // Шаг 5: Базовая настройка модуля
         $this->step++;
         $this->log("Шаг {$this->step}/{$this->totalSteps}: Базовая настройка модуля...", 'blue');
         $this->configureAVSBookingModule();
-        
+
         $this->printSummary();
-        
+
         return true;
     }
-    
+
     /**
      * Проверка прав на запись
      */
@@ -120,17 +121,17 @@ class AVSBookingAutoInstaller
             $this->config['bitrix_root'] . '/managed_cache',
             $this->config['project_root'] . '/upload'
         ];
-        
+
         foreach ($dirs as $dir) {
             if (is_dir($dir) && !is_writable($dir)) {
                 $this->logError("Директория не доступна для записи: {$dir}");
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     /**
      * Проверка PHP окружения
      */
@@ -139,16 +140,16 @@ class AVSBookingAutoInstaller
         $requiredPhpVersion = '7.4';
         $requiredExtensions = ['curl', 'json', 'mbstring', 'pdo_mysql', 'gd2'];
         $optionalExtensions = ['openssl', 'zip', 'xml'];
-        
+
         $currentVersion = phpversion();
-        
+
         // Проверка версии PHP
         if (version_compare($currentVersion, $requiredPhpVersion, '<')) {
             $this->logError("Требуется PHP версии {$requiredPhpVersion}+, установлена: {$currentVersion}");
         } else {
             $this->log("✓ PHP версия {$currentVersion} (требуется {$requiredPhpVersion}+)", 'green');
         }
-        
+
         // Проверка расширений
         $missingRequired = [];
         foreach ($requiredExtensions as $ext) {
@@ -159,13 +160,13 @@ class AVSBookingAutoInstaller
                 $this->log("✗ Расширение {$ext} - ОТСУТСТВУЕТ", 'red');
             }
         }
-        
+
         if (!empty($missingRequired)) {
             $this->logError("Отсутствуют обязательные расширения PHP: " . implode(', ', $missingRequired));
             $this->log("   Установите их командой (Ubuntu/Debian):", 'yellow');
             $this->log("   sudo apt-get install php" . $currentVersion . "-" . implode(" php" . $currentVersion . "-", $missingRequired), 'yellow');
         }
-        
+
         // Проверка дополнительных расширений (только предупреждение)
         foreach ($optionalExtensions as $ext) {
             if (extension_loaded($ext)) {
@@ -174,58 +175,58 @@ class AVSBookingAutoInstaller
                 $this->log("⚠ Расширение {$ext} - не установлено (опционально)", 'yellow');
             }
         }
-        
+
         $this->log("Проверка PHP окружения завершена.", 'green');
         return empty($missingRequired);
     }
-    
+
     /**
      * Установка LibreBooking
      */
     private function installLibreBooking()
     {
         $bookingDir = $this->config['project_root'] . $this->config['booking_path'];
-        
+
         // Проверяем, установлен ли уже LibreBooking
         if (file_exists($bookingDir . '/Web/Services/index.php')) {
             $this->log("LibreBooking уже установлен по пути: {$bookingDir}", 'green');
             $this->log("Пропускаем установку...", 'yellow');
             return true;
         }
-        
+
         $this->log("Начинаю установку LibreBooking в: {$bookingDir}", 'blue');
-        
+
         // Скачивание
         $downloadUrl = "https://github.com/LibreBooking/librebooking/archive/refs/tags/2.8.6.2.tar.gz";
         $tarFile = $bookingDir . '.tar.gz';
-        
+
         $this->log("Скачиваю LibreBooking...");
-        
+
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $downloadUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_TIMEOUT, 60);
-        
+
         $data = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-        
+
         if ($httpCode !== 200 || !$data) {
             $this->logError("Не удалось скачать LibreBooking. HTTP код: {$httpCode}");
             return false;
         }
-        
+
         file_put_contents($tarFile, $data);
         $this->log("✓ Скачивание завершено", 'green');
-        
+
         // Распаковка
         $this->log("Распаковка архива...");
-        
+
         $phar = new PharData($tarFile);
         $phar->extractTo($this->config['project_root']);
-        
+
         // Переименовываем директорию
         $extractedDir = $this->config['project_root'] . '/librebooking-2.8.6.2';
         if (file_exists($extractedDir)) {
@@ -235,19 +236,19 @@ class AVSBookingAutoInstaller
             $this->logError("Не удалось найти распакованную директорию");
             return false;
         }
-        
+
         // Очистка
         unlink($tarFile);
-        
+
         // Установка прав
         chmod($bookingDir . '/tpl_c', 0777);
         chmod($bookingDir . '/tpl', 0777);
         chmod($bookingDir . '/uploads', 0777);
-        
+
         $this->log("✓ LibreBooking установлен", 'green');
         return true;
     }
-    
+
     /**
      * Настройка LibreBooking
      */
@@ -255,11 +256,11 @@ class AVSBookingAutoInstaller
     {
         $bookingDir = $this->config['project_root'] . $this->config['booking_path'];
         $configFile = $bookingDir . '/config/config.php';
-        
+
         // Проверяем, настроена ли уже база данных
         if (file_exists($configFile) && filesize($configFile) > 1000) {
             $this->log("LibreBooking уже настроен. Проверяю подключение к БД...", 'yellow');
-            
+
             // Проверка подключения к БД
             try {
                 $pdo = new PDO(
@@ -268,7 +269,7 @@ class AVSBookingAutoInstaller
                     $this->config['db_password']
                 );
                 $this->log("✓ Подключение к базе данных работает", 'green');
-                
+
                 // Проверяем API-пользователя
                 $stmt = $pdo->query("SELECT COUNT(*) FROM users WHERE username = '{$this->config['api_username']}'");
                 if ($stmt && $stmt->fetchColumn() > 0) {
@@ -276,13 +277,13 @@ class AVSBookingAutoInstaller
                 } else {
                     $this->log("⚠ API пользователь не найден. Создайте его вручную.", 'yellow');
                 }
-                
+
                 return true;
             } catch (PDOException $e) {
                 $this->log("База данных не настроена или недоступна. Выполняю настройку...", 'yellow');
             }
         }
-        
+
         // Создание конфигурационного файла
         $configContent = "<?php
 return [
@@ -300,10 +301,10 @@ return [
         'install.password' => '{$this->config['install_password']}'
     ]
 ];";
-        
+
         file_put_contents($configFile, $configContent);
         $this->log("✓ Конфигурационный файл создан", 'green');
-        
+
         // Создание базы данных и таблиц через PHP скрипт LibreBooking
         $installScript = $bookingDir . '/install/install.php';
         if (file_exists($installScript)) {
@@ -311,10 +312,10 @@ return [
             $this->log("Перейдите по ссылке для завершения установки:", 'blue');
             $this->log("{$this->config['site_url']}{$this->config['booking_path']}/install/install.php", 'bold');
             $this->log("Используйте пароль установщика: {$this->config['install_password']}", 'yellow');
-            
+
             $this->log("\nНажмите Enter после завершения установки через браузер...", 'yellow');
             fgets(STDIN);
-            
+
             // Удаление установщика
             $this->recursiveRemoveDir($bookingDir . '/install');
             $this->log("✓ Установщик удален", 'green');
@@ -322,22 +323,22 @@ return [
             $this->logError("Установщик LibreBooking не найден");
             return false;
         }
-        
+
         return true;
     }
-    
+
     /**
      * Установка модуля AVS Booking в Битрикс
      */
     private function installAVSBookingModule()
     {
         $modulePath = $this->config['project_root'] . '/local/modules/avs_booking';
-        
+
         // Проверяем, установлен ли уже модуль
         if (file_exists($modulePath . '/install/index.php') && is_dir($modulePath)) {
             $this->log("Модуль AVS Booking уже существует. Проверяю установку в Битрикс...", 'yellow');
         }
-        
+
         // Создаем таблицы БД модуля
         $sqlFile = $modulePath . '/install/db/install.sql';
         if (file_exists($sqlFile)) {
@@ -347,12 +348,12 @@ return [
                     $this->config['db_user'],
                     $this->config['db_password']
                 );
-                
+
                 $sql = file_get_contents($sqlFile);
-                
+
                 // Выбираем базу данных
                 $pdo->exec("USE `{$this->config['db_name']}`");
-                
+
                 // Выполняем SQL
                 $pdo->exec($sql);
                 $this->log("✓ Таблицы модуля созданы", 'green');
@@ -360,20 +361,20 @@ return [
                 $this->log("Таблицы уже существуют или ошибка: " . $e->getMessage(), 'yellow');
             }
         }
-        
+
         // Подключаемся к Битрикс для установки модуля
         $bitrixProlog = $this->config['bitrix_root'] . '/modules/main/include/prolog_before.php';
-        
+
         if (!file_exists($bitrixProlog)) {
             $this->logError("Битрикс не найден по пути: {$this->config['bitrix_root']}");
             return false;
         }
-        
+
         $this->log("Установка модуля через API Битрикс...", 'blue');
-        
+
         // Создаем временный PHP скрипт для установки модуля
         $installScript = $this->config['project_root'] . '/temp_install_module.php';
-        
+
         $scriptContent = "<?php
 \$_SERVER['DOCUMENT_ROOT'] = '{$this->config['project_root']}';
 require_once \$_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_before.php';
@@ -400,36 +401,36 @@ if (!CModule::IncludeModule(\$moduleId)) {
 
 require_once \$_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/epilog_after.php';
 ";
-        
+
         file_put_contents($installScript, $scriptContent);
-        
+
         // Выполняем скрипт
         $output = [];
         $returnVar = 0;
         exec("php {$installScript} 2>&1", $output, $returnVar);
-        
+
         $this->log(implode("\n", $output), $returnVar === 0 ? 'green' : 'red');
-        
+
         // Удаляем временный скрипт
         unlink($installScript);
-        
+
         if ($returnVar !== 0) {
             $this->logError("Не удалось установить модуль через API Битрикс. Выполните установку вручную через админку.");
         }
-        
+
         return $returnVar === 0;
     }
-    
+
     /**
      * Базовая настройка модуля AVS Booking (без ЮKassa)
      */
     private function configureAVSBookingModule()
     {
         $apiUrl = $this->config['site_url'] . $this->config['booking_path'] . '/Web/Services';
-        
+
         // Создаем PHP скрипт для настройки опций
         $optionsScript = $this->config['project_root'] . '/temp_set_options.php';
-        
+
         $scriptContent = "<?php
 \$_SERVER['DOCUMENT_ROOT'] = '{$this->config['project_root']}';
 require_once \$_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_before.php';
@@ -476,29 +477,29 @@ if (CModule::IncludeModule(\$moduleId)) {
     echo 'Модуль avs_booking не найден\\n';
 }
 ";
-        
+
         file_put_contents($optionsScript, $scriptContent);
-        
+
         // Выполняем скрипт
         $output = [];
         $returnVar = 0;
         exec("php {$optionsScript} 2>&1", $output, $returnVar);
-        
+
         $this->log(implode("\n", $output), $returnVar === 0 ? 'green' : 'red');
-        
+
         // Удаляем временный скрипт
         unlink($optionsScript);
-        
+
         if ($returnVar === 0) {
             $this->log("✓ Базовая настройка модуля завершена", 'green');
             $this->log("\n⚠️ ВАЖНО: Настройки ЮKassa не были сконфигурированы.", 'yellow');
             $this->log("   Настройте их вручную в админке Битрикс:", 'yellow');
             $this->log("   Настройки → Настройки продуктов → Настройки модулей → AVS Booking → API и интеграции", 'yellow');
         }
-        
+
         return $returnVar === 0;
     }
-    
+
     /**
      * Рекурсивное удаление директории
      */
@@ -507,16 +508,16 @@ if (CModule::IncludeModule(\$moduleId)) {
         if (!is_dir($dir)) {
             return;
         }
-        
+
         $files = array_diff(scandir($dir), ['.', '..']);
         foreach ($files as $file) {
             $path = $dir . '/' . $file;
             is_dir($path) ? $this->recursiveRemoveDir($path) : unlink($path);
         }
-        
+
         rmdir($dir);
     }
-    
+
     /**
      * Вывод баннера
      */
@@ -541,7 +542,7 @@ if (CModule::IncludeModule(\$moduleId)) {
 ";
         echo $this->colorize($banner, 'blue');
     }
-    
+
     /**
      * Вывод итогов
      */
@@ -587,7 +588,7 @@ if (CModule::IncludeModule(\$moduleId)) {
 ";
         echo $this->colorize($summary, 'green');
     }
-    
+
     /**
      * Логирование
      */
@@ -596,10 +597,10 @@ if (CModule::IncludeModule(\$moduleId)) {
         $timestamp = date('Y-m-d H:i:s');
         $logMessage = "[{$timestamp}] {$message}";
         $this->logs[] = $logMessage;
-        
+
         echo $this->colorize($logMessage, $color) . "\n";
     }
-    
+
     /**
      * Логирование ошибки
      */
@@ -607,13 +608,13 @@ if (CModule::IncludeModule(\$moduleId)) {
     {
         $this->errors[] = $message;
         $this->log("ERROR: {$message}", 'red');
-        
+
         if ($exit) {
             $this->printSummary();
             exit(1);
         }
     }
-    
+
     /**
      * Цветной вывод
      */
@@ -622,7 +623,7 @@ if (CModule::IncludeModule(\$moduleId)) {
         if (php_sapi_name() !== 'cli') {
             return $text;
         }
-        
+
         return $this->colors[$color] . $text . $this->colors['reset'];
     }
 }
