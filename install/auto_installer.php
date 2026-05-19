@@ -15,7 +15,7 @@ $config = [
     // Пути
     'project_root' => '/home/avsdevelopment2/park.na4u.ru/www',
     'bitrix_root' => '/home/avsdevelopment2/park.na4u.ru/www/bitrix',
-    'booking_path' => '/home/avsdevelopment2/park.na4u.ru/booking',
+    'booking_path' => '/booking',
 
     // База данных LibreBooking
     'db_host' => 'localhost',
