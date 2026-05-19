@@ -11,11 +11,16 @@ use AVS\Booking\SyncManager;
 
 header('Content-Type: application/json');
 
-// Временно отключаем CSRF для диагностики
-// if (!check_bitrix_sessid()) {
-//     echo json_encode(['success' => false, 'error' => 'CSRF token mismatch']);
-//     exit;
-// }
+// Восстанавливаем CSRF защиту
+if (!check_bitrix_sessid()) {
+    \Bitrix\Main\Diag\Debug::writeToFile(
+        ['sessid' => $_REQUEST['sessid'] ?? 'not set', 'remote_addr' => $_SERVER['REMOTE_ADDR']],
+        'CSRF validation failed in ajax_sync.php',
+        'avs_booking.log'
+    );
+    echo json_encode(['success' => false, 'error' => 'CSRF token mismatch']);
+    exit;
+}
 
 $action = $_REQUEST['action'] ?? 'quick';
 
@@ -44,6 +49,9 @@ try {
             throw new Exception('Unknown action');
     }
 
+    // Добавляем CSRF токен в ответ для клиента
+    $result['csrf_token'] = bitrix_sessid();
+    
     echo json_encode($result);
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
