@@ -20,12 +20,12 @@ $config = [
     // База данных LibreBooking
     'db_host' => 'localhost',
     'db_name' => 'vpark-litepms',
-    'db_user' => 'vpark1',
-    'db_password' => 'hq46jB7&',
+    'db_user' => '',
+    'db_password' => '',
 
     // LibreBooking API пользователь
-    'api_username' => 'api_user',
-    'api_password' => '^ti*54gjnI',
+    'api_username' => '',
+    'api_password' => '',
 
     // Основные настройки времени
     'timezone' => 'Asia/Yekaterinburg',
@@ -38,7 +38,7 @@ $config = [
     'salt' => '',
 
     // Пароль установщика LibreBooking
-    'install_password' => '^ti*54gjnI'
+    'install_password' => ''
 ];
 
 // ============================================
