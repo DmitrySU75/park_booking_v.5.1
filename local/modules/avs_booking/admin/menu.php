@@ -1,9 +1,4 @@
 <?php
-
-/**
- * Файл: /local/modules/avs_booking/admin/menu.php
- */
-
 require_once($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_admin_before.php');
 
 use Bitrix\Main\Localization\Loc;
@@ -46,6 +41,12 @@ if ($APPLICATION->GetGroupRight($module_id) >= 'R') {
                 'items_id' => 'avs_booking_discounts',
             ],
             [
+                'text' => 'Синхронизация',
+                'url' => 'avs_booking_sync.php?lang=' . LANGUAGE_ID,
+                'title' => 'Синхронизация с LibreBooking',
+                'items_id' => 'avs_booking_sync',
+            ],
+            [
                 'text' => 'Настройки',
                 'url' => '/bitrix/admin/settings.php?mid=avs_booking&lang=' . LANGUAGE_ID,
                 'title' => 'Настройки модуля',
@@ -58,3 +59,4 @@ if ($APPLICATION->GetGroupRight($module_id) >= 'R') {
 }
 
 return false;
+?>
