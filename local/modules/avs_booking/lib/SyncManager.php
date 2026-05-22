@@ -18,11 +18,19 @@ class SyncManager
     public function __construct()
     {
         $this->api = new \AVSBookingLibreBookingClient();
-        $this->logFile = $_SERVER['DOCUMENT_ROOT'] . '/upload/avs_booking_sync.log';
+        $this->logFile = $_SERVER['DOCUMENT_ROOT'] . '/upload/avs_booking_debug.log';
+        $this->log("SyncManager initialized");
+    }
+
+    private function log($message, $level = 'info')
+    {
+        $logEntry = date('Y-m-d H:i:s') . " [SyncManager][$level] " . $message . PHP_EOL;
+        file_put_contents($this->logFile, $logEntry, FILE_APPEND);
     }
 
     public function fullSync($daysBack = 30)
     {
+        $this->log("Starting fullSync for $daysBack days back");
         $startTime = microtime(true);
         $result = [
             'success' => true,
@@ -35,11 +43,13 @@ class SyncManager
         try {
             $startDate = date('Y-m-d', strtotime("-$daysBack days"));
             $endDate = date('Y-m-d', strtotime('+' . $daysBack . ' days'));
+            $this->log("Period: $startDate - $endDate");
 
             $reservations = $this->api->getReservations($startDate, $endDate);
+            $this->log("Got " . count($reservations) . " reservations from LibreBooking");
 
             if (empty($reservations)) {
-                $this->log("Нет бронирований для синхронизации за период {$startDate} - {$endDate}");
+                $this->log("No reservations to sync");
                 return $result;
             }
 
@@ -50,8 +60,10 @@ class SyncManager
                     $existingOrders[$order['LIBREBOOKING_RESERVATION_ID']] = $order;
                 }
             }
+            $this->log("Existing orders in Bitrix: " . count($existingOrders));
 
             $resourceMap = $this->getResourceMap();
+            $this->log("Resource map: " . print_r($resourceMap, true));
 
             foreach ($reservations as $res) {
                 try {
@@ -60,11 +72,15 @@ class SyncManager
                     $pavilionId = $resourceMap[$resourceId] ?? 0;
 
                     if (!$pavilionId) {
-                        $this->log("Пропуск: не найдена беседка для resource_id={$resourceId}", 'warning');
+                        $this->log("Skipping: no pavilion for resource_id=$resourceId", 'warning');
                         continue;
                     }
 
                     $gazebo = \AVSBookingModule::getGazeboData($pavilionId);
+                    if (!$gazebo) {
+                        $this->log("Skipping: gazebo data not found for pavilion ID $pavilionId", 'warning');
+                        continue;
+                    }
 
                     if (isset($existingOrders[$referenceNumber])) {
                         $order = $existingOrders[$referenceNumber];
@@ -83,12 +99,12 @@ class SyncManager
                                 'end_time' => $res['endDate']
                             ]);
                             $result['updated']++;
-                            $this->log("Обновлено бронирование: {$referenceNumber}");
+                            $this->log("Updated reservation: $referenceNumber");
                         }
                     } else {
                         $bookingData = [
                             'pavilion_id' => $pavilionId,
-                            'pavilion_name' => $gazebo['name'] ?? "Беседка #{$pavilionId}",
+                            'pavilion_name' => $gazebo['name'] ?? "Pavilion #{$pavilionId}",
                             'client_name' => trim(($res['firstName'] ?? '') . ' ' . ($res['lastName'] ?? '')),
                             'client_phone' => $res['phone'] ?? '',
                             'client_email' => $res['email'] ?? '',
@@ -113,12 +129,14 @@ class SyncManager
                         $orderId = Order::create($bookingData);
                         if ($orderId) {
                             $result['added']++;
-                            $this->log("Добавлено новое бронирование: {$referenceNumber}");
+                            $this->log("Added new order: $referenceNumber, order ID: $orderId");
+                        } else {
+                            $this->log("Failed to create order for reservation: $referenceNumber", 'error');
                         }
                     }
                 } catch (\Exception $e) {
                     $result['errors'][] = $e->getMessage();
-                    $this->log("Ошибка обработки: " . $e->getMessage(), 'error');
+                    $this->log("Error processing reservation: " . $e->getMessage(), 'error');
                 }
             }
 
@@ -126,26 +144,28 @@ class SyncManager
         } catch (\Exception $e) {
             $result['success'] = false;
             $result['errors'][] = $e->getMessage();
-            $this->log("Ошибка синхронизации: " . $e->getMessage(), 'error');
+            $this->log("Sync error: " . $e->getMessage(), 'error');
         }
 
         $result['execution_time'] = round(microtime(true) - $startTime, 2);
-        $this->log("Синхронизация завершена: добавлено {$result['added']}, обновлено {$result['updated']}, время: {$result['execution_time']} сек");
-
+        $this->log("Sync completed: added {$result['added']}, updated {$result['updated']}, errors " . count($result['errors']) . ", time {$result['execution_time']} sec");
         return $result;
     }
 
     public function quickSync()
     {
+        $this->log("Quick sync (last 1 day)");
         return $this->fullSync(1);
     }
 
     public function syncReservation($referenceNumber)
     {
+        $this->log("Sync single reservation: $referenceNumber");
         try {
             $res = $this->api->getReservation($referenceNumber);
             if (!$res) {
-                return ['success' => false, 'error' => 'Бронирование не найдено'];
+                $this->log("Reservation not found: $referenceNumber", 'error');
+                return ['success' => false, 'error' => 'Reservation not found'];
             }
 
             $resourceMap = $this->getResourceMap();
@@ -153,7 +173,8 @@ class SyncManager
             $pavilionId = $resourceMap[$resourceId] ?? 0;
 
             if (!$pavilionId) {
-                return ['success' => false, 'error' => 'Беседка не найдена'];
+                $this->log("No pavilion for resource ID $resourceId", 'error');
+                return ['success' => false, 'error' => 'Pavilion not found'];
             }
 
             $existingOrder = Order::getByLibrebookingId($referenceNumber);
@@ -163,12 +184,13 @@ class SyncManager
                     'start_time' => $res['startDate'],
                     'end_time' => $res['endDate']
                 ]);
+                $this->log("Updated existing order for $referenceNumber");
                 return ['success' => true, 'action' => 'updated'];
             } else {
                 $gazebo = \AVSBookingModule::getGazeboData($pavilionId);
                 $bookingData = [
                     'pavilion_id' => $pavilionId,
-                    'pavilion_name' => $gazebo['name'] ?? "Беседка #{$pavilionId}",
+                    'pavilion_name' => $gazebo['name'] ?? "Pavilion #{$pavilionId}",
                     'client_name' => trim(($res['firstName'] ?? '') . ' ' . ($res['lastName'] ?? '')),
                     'start_time' => $res['startDate'],
                     'end_time' => $res['endDate'],
@@ -177,9 +199,11 @@ class SyncManager
                     'rental_type' => $this->detectRentalType($res['startDate'], $res['endDate'])
                 ];
                 $orderId = Order::create($bookingData);
+                $this->log("Created new order for $referenceNumber, order ID: $orderId");
                 return ['success' => true, 'action' => 'created', 'order_id' => $orderId];
             }
         } catch (\Exception $e) {
+            $this->log("Error in syncReservation: " . $e->getMessage(), 'error');
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -238,14 +262,8 @@ class SyncManager
         foreach ($existingOrders as $ref => $order) {
             if (!in_array($ref, $currentRefs) && $order['STATUS'] != 'cancelled') {
                 Order::updateStatus($order['ID'], 'cancelled');
-                $this->log("Помечено как отмененное: {$ref}");
+                $this->log("Marked as cancelled: $ref");
             }
         }
-    }
-
-    private function log($message, $level = 'info')
-    {
-        $logEntry = date('Y-m-d H:i:s') . " [{$level}] " . $message . PHP_EOL;
-        file_put_contents($this->logFile, $logEntry, FILE_APPEND);
     }
 }
