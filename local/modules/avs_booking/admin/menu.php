@@ -1,4 +1,10 @@
 <?php
+
+/**
+ * Файл: admin/menu.php
+ * Пункты меню для административного раздела
+ */
+
 require_once($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_admin_before.php');
 
 use Bitrix\Main\Localization\Loc;
@@ -6,7 +12,6 @@ use Bitrix\Main\Localization\Loc;
 Loc::loadMessages(__FILE__);
 
 $module_id = 'avs_booking';
-
 if ($APPLICATION->GetGroupRight($module_id) >= 'R') {
     $aMenu = [
         'parent_menu' => 'global_menu_services',
@@ -48,15 +53,12 @@ if ($APPLICATION->GetGroupRight($module_id) >= 'R') {
             ],
             [
                 'text' => 'Настройки',
-                'url' => '/bitrix/admin/settings.php?mid=avs_booking&lang=' . LANGUAGE_ID,
+                'url' => '/bitrix/admin/settings.php?mid=' . $module_id . '&lang=' . LANGUAGE_ID,
                 'title' => 'Настройки модуля',
                 'items_id' => 'avs_booking_settings',
             ]
         ]
     ];
-
     return $aMenu;
 }
-
 return false;
-?>

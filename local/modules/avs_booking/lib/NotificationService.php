@@ -1,16 +1,8 @@
 <?php
 
-/**
- * Файл: /local/modules/avs_booking/lib/NotificationService.php
- */
-
 class AVSNotificationService
 {
-    private $adminEmail;
-    private $managerEmail;
-    private $b24Webhook;
-    private $tgBotToken;
-    private $tgManagerChatId;
+    private $adminEmail, $managerEmail, $b24Webhook, $tgBotToken, $tgManagerChatId;
 
     public function __construct()
     {
@@ -23,40 +15,16 @@ class AVSNotificationService
 
     public function sendNewOrderNotification($order)
     {
-        $message = "🆕 НОВОЕ БРОНИРОВАНИЕ\n\n";
-        $message .= "Номер: {$order['ORDER_NUMBER']}\n";
-        $message .= "Беседка: {$order['PAVILION_NAME']}\n";
-        $message .= "Клиент: {$order['CLIENT_NAME']}\n";
-        $message .= "Телефон: {$order['CLIENT_PHONE']}\n";
-        $message .= "Начало: {$order['START_TIME']}\n";
-        $message .= "Окончание: {$order['END_TIME']}\n";
-        $message .= "Сумма: {$order['PRICE']} руб.\n";
-        $message .= "Аванс: {$order['DEPOSIT_AMOUNT']} руб.\n";
-        $message .= "Тип: {$order['RENTAL_TYPE']}\n";
-
-        if ($this->managerEmail) {
-            mail($this->managerEmail, 'Новое бронирование #' . $order['ORDER_NUMBER'], $message, 'Content-Type: text/plain; charset=utf-8');
-        }
-
-        if ($this->adminEmail && $this->adminEmail !== $this->managerEmail) {
-            mail($this->adminEmail, 'Новое бронирование #' . $order['ORDER_NUMBER'], $message, 'Content-Type: text/plain; charset=utf-8');
-        }
-
+        $message = "🆕 НОВОЕ БРОНИРОВАНИЕ\n\nНомер: {$order['ORDER_NUMBER']}\nБеседка: {$order['PAVILION_NAME']}\nКлиент: {$order['CLIENT_NAME']}\nТелефон: {$order['CLIENT_PHONE']}\nНачало: {$order['START_TIME']}\nОкончание: {$order['END_TIME']}\nСумма: {$order['PRICE']} руб.\nАванс: {$order['DEPOSIT_AMOUNT']} руб.\nТип: {$order['RENTAL_TYPE']}";
+        if ($this->managerEmail) mail($this->managerEmail, 'Новое бронирование #' . $order['ORDER_NUMBER'], $message, 'Content-Type: text/plain; charset=utf-8');
+        if ($this->adminEmail && $this->adminEmail !== $this->managerEmail) mail($this->adminEmail, 'Новое бронирование #' . $order['ORDER_NUMBER'], $message, 'Content-Type: text/plain; charset=utf-8');
         $this->sendToBitrix24($order);
         $this->sendToTelegram($message);
     }
 
     public function sendClientConfirmation($order)
     {
-        $message = "✅ Ваше бронирование подтверждено!\n\n";
-        $message .= "Номер: {$order['ORDER_NUMBER']}\n";
-        $message .= "Беседка: {$order['PAVILION_NAME']}\n";
-        $message .= "Дата: " . date('d.m.Y', strtotime($order['START_TIME'])) . "\n";
-        $message .= "Время: " . date('H:i', strtotime($order['START_TIME'])) . " - " . date('H:i', strtotime($order['END_TIME'])) . "\n";
-        $message .= "Сумма: {$order['PRICE']} руб.\n";
-        $message .= "Аванс: {$order['DEPOSIT_AMOUNT']} руб.\n\n";
-        $message .= "Ссылка для оплаты: https://" . $_SERVER['HTTP_HOST'] . "/payment/?order_id={$order['ID']}\n";
-
+        $message = "✅ Ваше бронирование подтверждено!\n\nНомер: {$order['ORDER_NUMBER']}\nБеседка: {$order['PAVILION_NAME']}\nДата: " . date('d.m.Y', strtotime($order['START_TIME'])) . "\nВремя: " . date('H:i', strtotime($order['START_TIME'])) . " - " . date('H:i', strtotime($order['END_TIME'])) . "\nСумма: {$order['PRICE']} руб.\nАванс: {$order['DEPOSIT_AMOUNT']} руб.\n\nСсылка для оплаты: https://" . $_SERVER['HTTP_HOST'] . "/payment/?order_id={$order['ID']}";
         if ($order['CLIENT_EMAIL']) {
             \CEvent::Send('AVS_BOOKING_CONFIRMATION', 's1', [
                 'ORDER_NUMBER' => $order['ORDER_NUMBER'],
@@ -71,12 +39,7 @@ class AVSNotificationService
 
     public function sendPaymentSuccessNotification($order)
     {
-        $message = "💳 Оплата получена!\n\n";
-        $message .= "Номер бронирования: {$order['ORDER_NUMBER']}\n";
-        $message .= "Беседка: {$order['PAVILION_NAME']}\n";
-        $message .= "Сумма: {$order['PAID_AMOUNT']} руб.\n\n";
-        $message .= "Спасибо за бронирование! Ждем вас!\n";
-
+        $message = "💳 Оплата получена!\n\nНомер бронирования: {$order['ORDER_NUMBER']}\nБеседка: {$order['PAVILION_NAME']}\nСумма: {$order['PAID_AMOUNT']} руб.\n\nСпасибо за бронирование! Ждем вас!";
         if ($order['CLIENT_EMAIL']) {
             \CEvent::Send('AVS_BOOKING_PAYMENT_SUCCESS', 's1', [
                 'ORDER_NUMBER' => $order['ORDER_NUMBER'],
@@ -88,12 +51,7 @@ class AVSNotificationService
 
     public function sendConfirmationNotification($order)
     {
-        $message = "📋 Бронирование подтверждено менеджером!\n\n";
-        $message .= "Номер: {$order['ORDER_NUMBER']}\n";
-        $message .= "Беседка: {$order['PAVILION_NAME']}\n";
-        $message .= "Дата: " . date('d.m.Y', strtotime($order['START_TIME'])) . "\n";
-        $message .= "Время: " . date('H:i', strtotime($order['START_TIME'])) . " - " . date('H:i', strtotime($order['END_TIME'])) . "\n";
-
+        $message = "📋 Бронирование подтверждено менеджером!\n\nНомер: {$order['ORDER_NUMBER']}\nБеседка: {$order['PAVILION_NAME']}\nДата: " . date('d.m.Y', strtotime($order['START_TIME'])) . "\nВремя: " . date('H:i', strtotime($order['START_TIME'])) . " - " . date('H:i', strtotime($order['END_TIME'])) . "\n";
         if ($order['CLIENT_EMAIL']) {
             \CEvent::Send('AVS_BOOKING_CONFIRMATION', 's1', [
                 'ORDER_NUMBER' => $order['ORDER_NUMBER'],
@@ -109,7 +67,6 @@ class AVSNotificationService
     private function sendToBitrix24($order)
     {
         if (!$this->b24Webhook) return;
-
         $leadData = [
             'TITLE' => 'Бронирование беседки ' . $order['PAVILION_NAME'],
             'NAME' => $order['CLIENT_NAME'],
@@ -117,7 +74,6 @@ class AVSNotificationService
             'COMMENTS' => "Бронирование #{$order['ORDER_NUMBER']}\nНачало: {$order['START_TIME']}\nОкончание: {$order['END_TIME']}\nСумма: {$order['PRICE']} руб.",
             'SOURCE_ID' => 'WEB'
         ];
-
         $ch = curl_init($this->b24Webhook . '/crm.lead.add.json');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
@@ -130,12 +86,7 @@ class AVSNotificationService
     {
         if ($this->tgBotToken && $this->tgManagerChatId) {
             $url = "https://api.telegram.org/bot{$this->tgBotToken}/sendMessage";
-            $data = [
-                'chat_id' => $this->tgManagerChatId,
-                'text' => $message,
-                'parse_mode' => 'HTML'
-            ];
-
+            $data = ['chat_id' => $this->tgManagerChatId, 'text' => $message, 'parse_mode' => 'HTML'];
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);

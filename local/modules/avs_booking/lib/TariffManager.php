@@ -1,9 +1,5 @@
 <?php
 
-/**
- * Файл: /local/modules/avs_booking/lib/TariffManager.php
- */
-
 namespace AVS\Booking;
 
 use Bitrix\Main\Config\Option;
@@ -13,19 +9,14 @@ class TariffManager
     public static function calculatePrice($pavilionId, $rentalType, $date, $hours = null, $discountCode = null)
     {
         $gazebo = \AVSBookingModule::getGazeboData($pavilionId);
-        if (!$gazebo) {
-            return ['error' => 'Беседка не найдена'];
-        }
+        if (!$gazebo) return ['error' => 'Беседка не найдена'];
 
         $minHours = (int)Option::get('avs_booking', 'min_hours', 4);
-        $total = 0;
-        $duration = 0;
+        $total = $duration = 0;
 
         switch ($rentalType) {
             case 'hourly':
-                if ($hours < $minHours) {
-                    return ['error' => "Минимальная продолжительность аренды - {$minHours} часа"];
-                }
+                if ($hours < $minHours) return ['error' => "Минимальная продолжительность аренды - {$minHours} часа"];
                 $total = $gazebo['hourly_price'] * $hours;
                 $duration = $hours;
                 break;
@@ -44,7 +35,7 @@ class TariffManager
 
         $restrictions = \AVSBookingModule::getDateRestrictions($pavilionId, $date);
         $priceModifier = $restrictions['price_modifier'] ?? 1;
-        $total = $total * $priceModifier;
+        $total *= $priceModifier;
 
         $discount = 0;
         if ($discountCode) {
@@ -55,13 +46,11 @@ class TariffManager
             }
         }
 
-        $deposit = $gazebo['deposit_amount'];
-
         return [
             'success' => true,
             'base_price' => $gazebo['hourly_price'],
             'total_price' => round($total, 2),
-            'deposit_amount' => $deposit,
+            'deposit_amount' => $gazebo['deposit_amount'],
             'discount_amount' => round($discount, 2),
             'duration_hours' => $duration,
             'price_modifier' => $priceModifier,
@@ -72,23 +61,14 @@ class TariffManager
     public static function calculateExtensionPrice($orderId, $newEndTime)
     {
         $order = Order::get($orderId);
-        if (!$order) {
-            return ['error' => 'Заказ не найден'];
-        }
-
+        if (!$order) return ['error' => 'Заказ не найден'];
         $currentEnd = new \DateTime($order['END_TIME']->toString());
         $newEnd = new \DateTime($newEndTime);
-
         $additionalMinutes = ($newEnd->getTimestamp() - $currentEnd->getTimestamp()) / 60;
-
-        if ($additionalMinutes <= 0) {
-            return ['error' => 'Новое время должно быть позже текущего'];
-        }
-
+        if ($additionalMinutes <= 0) return ['error' => 'Новое время должно быть позже текущего'];
         $originalDuration = $order['DURATION_HOURS'];
         $hourlyRate = $order['PRICE'] / $originalDuration;
         $additionalPrice = ($hourlyRate / 60) * $additionalMinutes;
-
         return [
             'success' => true,
             'additional_minutes' => $additionalMinutes,

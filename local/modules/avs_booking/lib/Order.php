@@ -10,7 +10,6 @@ class Order
     {
         $legalEntity = \AVSBookingModule::getLegalEntityByPavilionId($data['pavilion_id']);
         $orderNumber = self::generateOrderNumber();
-
         $priceData = TariffManager::calculatePrice(
             $data['pavilion_id'],
             $data['rental_type'],
@@ -18,12 +17,8 @@ class Order
             $data['duration_hours'] ?? null,
             $data['discount_code'] ?? null
         );
+        if (isset($priceData['error'])) return false;
 
-        if (isset($priceData['error'])) {
-            return false;
-        }
-
-        // Конвертируем дату в формат, понятный Битрикс
         $startTime = self::convertToBitrixDate($data['start_time']);
         $endTime = self::convertToBitrixDate($data['end_time']);
 
@@ -50,12 +45,7 @@ class Order
             'CREATED_AT' => new DateTime(),
             'UPDATED_AT' => new DateTime()
         ]);
-
-        if ($result->isSuccess()) {
-            return $result->getId();
-        }
-
-        return false;
+        return $result->isSuccess() ? $result->getId() : false;
     }
 
     private static function convertToBitrixDate($dateString)
@@ -74,35 +64,22 @@ class Order
 
     public static function getByOrderNumber($orderNumber)
     {
-        $result = OrderTable::getList([
-            'filter' => ['ORDER_NUMBER' => $orderNumber],
-            'limit' => 1
-        ]);
+        $result = OrderTable::getList(['filter' => ['ORDER_NUMBER' => $orderNumber], 'limit' => 1]);
         return $result->fetch();
     }
 
     public static function getByLibrebookingId($librebookingId)
     {
-        $result = OrderTable::getList([
-            'filter' => ['LIBREBOOKING_RESERVATION_ID' => $librebookingId],
-            'limit' => 1
-        ]);
+        $result = OrderTable::getList(['filter' => ['LIBREBOOKING_RESERVATION_ID' => $librebookingId], 'limit' => 1]);
         return $result->fetch();
     }
 
     public static function getList($filter = [], $limit = 100, $offset = 0)
     {
-        $params = [
-            'filter' => $filter,
-            'limit' => $limit,
-            'offset' => $offset,
-            'order' => ['ID' => 'DESC']
-        ];
+        $params = ['filter' => $filter, 'limit' => $limit, 'offset' => $offset, 'order' => ['ID' => 'DESC']];
         $result = OrderTable::getList($params);
         $orders = [];
-        while ($order = $result->fetch()) {
-            $orders[] = $order;
-        }
+        while ($order = $result->fetch()) $orders[] = $order;
         return $orders;
     }
 
@@ -110,7 +87,6 @@ class Order
     {
         $startDateTime = new \DateTime($startDate);
         $endDateTime = new \DateTime($endDate);
-
         $dateFilter = [
             '>=CREATED_AT' => \Bitrix\Main\Type\DateTime::createFromPhp($startDateTime->setTime(0, 0, 0)),
             '<=CREATED_AT' => \Bitrix\Main\Type\DateTime::createFromPhp($endDateTime->setTime(23, 59, 59)),
@@ -122,11 +98,7 @@ class Order
 
     public static function softDelete($orderId, $userId = null)
     {
-        $result = OrderTable::update($orderId, [
-            'DELETED_AT' => new DateTime(),
-            'DELETED_BY' => $userId ?: 0,
-            'STATUS' => 'deleted'
-        ]);
+        $result = OrderTable::update($orderId, ['DELETED_AT' => new DateTime(), 'DELETED_BY' => $userId ?: 0, 'STATUS' => 'deleted']);
         return $result->isSuccess();
     }
 
@@ -139,17 +111,9 @@ class Order
     public static function update($orderId, $data)
     {
         $updateData = ['UPDATED_AT' => new DateTime()];
-
-        if (isset($data['status'])) {
-            $updateData['STATUS'] = $data['status'];
-        }
-        if (isset($data['start_time'])) {
-            $updateData['START_TIME'] = self::convertToBitrixDate($data['start_time']);
-        }
-        if (isset($data['end_time'])) {
-            $updateData['END_TIME'] = self::convertToBitrixDate($data['end_time']);
-        }
-
+        if (isset($data['status'])) $updateData['STATUS'] = $data['status'];
+        if (isset($data['start_time'])) $updateData['START_TIME'] = self::convertToBitrixDate($data['start_time']);
+        if (isset($data['end_time'])) $updateData['END_TIME'] = self::convertToBitrixDate($data['end_time']);
         if (count($updateData) > 1) {
             $result = OrderTable::update($orderId, $updateData);
             return $result->isSuccess();
@@ -159,17 +123,8 @@ class Order
 
     public static function updatePaymentInfo($orderId, $paymentId, $paymentStatus, $paidAmount)
     {
-        $result = OrderTable::update($orderId, [
-            'PAYMENT_ID' => $paymentId,
-            'PAYMENT_STATUS' => $paymentStatus,
-            'PAID_AMOUNT' => $paidAmount,
-            'UPDATED_AT' => new DateTime()
-        ]);
-
-        if ($result->isSuccess() && $paymentStatus == 'succeeded') {
-            self::updateStatus($orderId, 'paid');
-        }
-
+        $result = OrderTable::update($orderId, ['PAYMENT_ID' => $paymentId, 'PAYMENT_STATUS' => $paymentStatus, 'PAID_AMOUNT' => $paidAmount, 'UPDATED_AT' => new DateTime()]);
+        if ($result->isSuccess() && $paymentStatus == 'succeeded') self::updateStatus($orderId, 'paid');
         return $result->isSuccess();
     }
 
