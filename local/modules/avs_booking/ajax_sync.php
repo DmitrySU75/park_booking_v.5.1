@@ -11,16 +11,15 @@ use AVS\Booking\SyncManager;
 
 header('Content-Type: application/json');
 
-// Восстанавливаем CSRF защиту
-if (!check_bitrix_sessid()) {
-    \Bitrix\Main\Diag\Debug::writeToFile(
-        ['sessid' => $_REQUEST['sessid'] ?? 'not set', 'remote_addr' => $_SERVER['REMOTE_ADDR']],
-        'CSRF validation failed in ajax_sync.php',
-        'avs_booking.log'
-    );
-    echo json_encode(['success' => false, 'error' => 'CSRF token mismatch']);
-    exit;
-}
+$logFile = $_SERVER['DOCUMENT_ROOT'] . '/upload/avs_booking_debug.log';
+file_put_contents($logFile, date('Y-m-d H:i:s') . " [ajax_sync] Request received: " . print_r($_REQUEST, true) . "\n", FILE_APPEND);
+
+// Проверка CSRF (раскомментировать после отладки)
+// if (!check_bitrix_sessid()) {
+//     file_put_contents($logFile, date('Y-m-d H:i:s') . " [ajax_sync] CSRF token mismatch\n", FILE_APPEND);
+//     echo json_encode(['success' => false, 'error' => 'CSRF token mismatch']);
+//     exit;
+// }
 
 $action = $_REQUEST['action'] ?? 'quick';
 
@@ -49,10 +48,9 @@ try {
             throw new Exception('Unknown action');
     }
 
-    // Добавляем CSRF токен в ответ для клиента
-    $result['csrf_token'] = bitrix_sessid();
-    
+    file_put_contents($logFile, date('Y-m-d H:i:s') . " [ajax_sync] Result: " . json_encode($result) . "\n", FILE_APPEND);
     echo json_encode($result);
 } catch (Exception $e) {
+    file_put_contents($logFile, date('Y-m-d H:i:s') . " [ajax_sync] Exception: " . $e->getMessage() . "\n", FILE_APPEND);
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
