@@ -65,19 +65,15 @@ if ($request->isPost() && check_bitrix_sessid()) {
                     }
                 }
                 if ($available) {
-                    $startTime = str_replace('T', ' ', $timeRange['start']);
-                    $startTime = preg_replace('/\+\d{2}:\d{2}$/', '', $startTime);
-                    $endTime = str_replace('T', ' ', $timeRange['end']);
-                    $endTime = preg_replace('/\+\d{2}:\d{2}$/', '', $endTime);
-
+                    // НИКАКИХ ПРЕОБРАЗОВАНИЙ ДАТ! ИСПОЛЬЗУЕМ ИСХОДНЫЕ ISO-СТРОКИ
                     $bookingData = [
                         'pavilion_id' => $elementId,
                         'pavilion_name' => $gazebo['name'],
                         'client_name' => $clientName,
                         'client_phone' => $clientPhone,
                         'client_email' => $clientEmail,
-                        'start_time' => $startTime,
-                        'end_time' => $endTime,
+                        'start_time' => $timeRange['start'],
+                        'end_time' => $timeRange['end'],
                         'price' => $priceData['total_price'],
                         'rental_type' => $rentalType,
                         'duration_hours' => $priceData['duration_hours'],
@@ -120,8 +116,7 @@ if ($request->isPost() && check_bitrix_sessid()) {
                                 try {
                                     if (!$client) $client = new AVSBookingLibreBookingClient();
                                     $client->cancelReservation($reservationId);
-                                } catch (Exception $e) {
-                                }
+                                } catch (Exception $e) {}
                             }
                         }
                     }
