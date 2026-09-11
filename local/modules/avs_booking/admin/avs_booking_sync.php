@@ -6,7 +6,6 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\Config\Option;
 
 $module_id = 'avs_booking';
-
 if ($APPLICATION->GetGroupRight($module_id) < 'W') {
     $APPLICATION->AuthForm('Доступ запрещен');
 }
@@ -22,10 +21,7 @@ $APPLICATION->SetTitle('Синхронизация с LibreBooking');
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && check_bitrix_sessid() && $_POST['action'] === 'sync_resources') {
     $result = syncResources();
     if ($result['success']) {
-        CAdminMessage::ShowMessage([
-            'MESSAGE' => "Синхронизация завершена. Создано: {$result['created']}, Обновлено: {$result['updated']}, Ошибок: {$result['errors']}",
-            'TYPE' => 'OK'
-        ]);
+        CAdminMessage::ShowMessage(['MESSAGE' => "Синхронизация завершена. Создано: {$result['created']}, Обновлено: {$result['updated']}, Ошибок: {$result['errors']}", 'TYPE' => 'OK']);
     } else {
         CAdminMessage::ShowMessage(['MESSAGE' => $result['error'], 'TYPE' => 'ERROR']);
     }
@@ -41,11 +37,9 @@ function syncResources()
     $apiUrl = rtrim(Option::get('avs_booking', 'api_url', ''), '/');
     $username = Option::get('avs_booking', 'api_username', '');
     $password = Option::get('avs_booking', 'api_password', '');
-
     file_put_contents($logFile, date('Y-m-d H:i:s') . " [syncResources] API URL: $apiUrl, user: $username\n", FILE_APPEND);
 
     if (empty($apiUrl) || empty($username) || empty($password)) {
-        file_put_contents($logFile, date('Y-m-d H:i:s') . " [syncResources] API settings missing\n", FILE_APPEND);
         $result['success'] = false;
         $result['error'] = 'Настройки API LibreBooking не заполнены.';
         return $result;
@@ -61,7 +55,6 @@ function syncResources()
 
     $pavilions = getPavilionsFromBitrix();
     if (empty($pavilions)) {
-        file_put_contents($logFile, date('Y-m-d H:i:s') . " [syncResources] No pavilions found\n", FILE_APPEND);
         $result['success'] = false;
         $result['error'] = 'Нет активных беседок для синхронизации (инфоблок 12).';
         return $result;
@@ -118,9 +111,7 @@ function authenticate($apiUrl, $username, $password)
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
     file_put_contents($logFile, date('Y-m-d H:i:s') . " [authenticate] HTTP $httpCode, response: " . substr($response, 0, 200) . "\n", FILE_APPEND);
-    if ($httpCode == 200) {
-        return json_decode($response, true);
-    }
+    if ($httpCode == 200) return json_decode($response, true);
     return false;
 }
 
@@ -129,21 +120,13 @@ function getScheduleId($apiUrl, $auth)
     global $logFile;
     $ch = curl_init($apiUrl . '/Schedules');
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Content-Type: application/json',
-        'X-Booked-SessionToken: ' . $auth['sessionToken'],
-        'X-Booked-UserId: ' . $auth['userId']
-    ]);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'X-Booked-SessionToken: ' . $auth['sessionToken'], 'X-Booked-UserId: ' . $auth['userId']]);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     $response = curl_exec($ch);
     curl_close($ch);
     $schedules = json_decode($response, true);
-    if (is_array($schedules) && !empty($schedules)) {
-        file_put_contents($logFile, date('Y-m-d H:i:s') . " [getScheduleId] Found schedule ID: {$schedules[0]['id']}\n", FILE_APPEND);
-        return $schedules[0]['id'];
-    }
-    file_put_contents($logFile, date('Y-m-d H:i:s') . " [getScheduleId] Using default schedule ID 1\n", FILE_APPEND);
+    if (is_array($schedules) && !empty($schedules)) return $schedules[0]['id'];
     return 1;
 }
 
@@ -153,11 +136,7 @@ function getResourceByPublicId($apiUrl, $auth, $publicId)
     if (empty($publicId)) return null;
     $ch = curl_init($apiUrl . '/Resources?publicId=' . urlencode($publicId));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Content-Type: application/json',
-        'X-Booked-SessionToken: ' . $auth['sessionToken'],
-        'X-Booked-UserId: ' . $auth['userId']
-    ]);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'X-Booked-SessionToken: ' . $auth['sessionToken'], 'X-Booked-UserId: ' . $auth['userId']]);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     $response = curl_exec($ch);
@@ -165,12 +144,8 @@ function getResourceByPublicId($apiUrl, $auth, $publicId)
     curl_close($ch);
     if ($httpCode == 200) {
         $data = json_decode($response, true);
-        if (is_array($data) && !empty($data)) {
-            file_put_contents($logFile, date('Y-m-d H:i:s') . " [getResourceByPublicId] Found resource for publicId=$publicId, ID={$data[0]['resource_id']}\n", FILE_APPEND);
-            return $data[0];
-        }
+        if (is_array($data) && !empty($data)) return $data[0];
     }
-    file_put_contents($logFile, date('Y-m-d H:i:s') . " [getResourceByPublicId] No resource for publicId=$publicId, HTTP $httpCode\n", FILE_APPEND);
     return null;
 }
 
@@ -195,18 +170,13 @@ function updateResource($apiUrl, $auth, $resourceId, $pavilion, $scheduleId)
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data, JSON_UNESCAPED_UNICODE));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Content-Type: application/json',
-        'X-Booked-SessionToken: ' . $auth['sessionToken'],
-        'X-Booked-UserId: ' . $auth['userId']
-    ]);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'X-Booked-SessionToken: ' . $auth['sessionToken'], 'X-Booked-UserId: ' . $auth['userId']]);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     curl_setopt($ch, CURLOPT_POSTREDIR, 3);
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
-    file_put_contents($logFile, date('Y-m-d H:i:s') . " [updateResource] resourceId=$resourceId, HTTP $httpCode\n", FILE_APPEND);
     return $httpCode == 200;
 }
 
@@ -231,18 +201,13 @@ function createResource($apiUrl, $auth, $scheduleId, $pavilion)
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data, JSON_UNESCAPED_UNICODE));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Content-Type: application/json',
-        'X-Booked-SessionToken: ' . $auth['sessionToken'],
-        'X-Booked-UserId: ' . $auth['userId']
-    ]);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'X-Booked-SessionToken: ' . $auth['sessionToken'], 'X-Booked-UserId: ' . $auth['userId']]);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     curl_setopt($ch, CURLOPT_POSTREDIR, 3);
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
-    file_put_contents($logFile, date('Y-m-d H:i:s') . " [createResource] {$pavilion['name']}, HTTP $httpCode\n", FILE_APPEND);
     if ($httpCode == 200 || $httpCode == 201) {
         $result = json_decode($response, true);
         return $result['resourceId'] ?? $result['id'] ?? null;
@@ -258,16 +223,7 @@ function getPavilionsFromBitrix()
         ['IBLOCK_ID' => 12, 'ACTIVE' => 'Y'],
         false,
         false,
-        [
-            'ID', 'NAME',
-            'PROPERTY_PARK',
-            'PROPERTY_ARTICLE',
-            'PROPERTY_VMESTIMOST_NUM',
-            'PROPERTY_PRICE_HOUR',
-            'PROPERTY_PRICE',
-            'PROPERTY_PRICE_NIGHT',
-            'PROPERTY_DEPOSIT_AMOUNT'
-        ]
+        ['ID', 'NAME', 'PROPERTY_PARK', 'PROPERTY_ARTICLE', 'PROPERTY_VMESTIMOST_NUM', 'PROPERTY_PRICE_HOUR', 'PROPERTY_PRICE', 'PROPERTY_PRICE_NIGHT', 'PROPERTY_DEPOSIT_AMOUNT']
     );
     while ($el = $res->Fetch()) {
         $park = $el['PROPERTY_PARK_VALUE'];
@@ -293,14 +249,7 @@ function getPavilionsFromBitrix()
 
 function getColorByPark($parkName)
 {
-    $colors = [
-        'Шарташ' => '#4CAF50',
-        'Парк Победы' => '#2196F3',
-        'Лесной' => '#8BC34A',
-        'Озёрный' => '#00BCD4',
-        'Центральный' => '#FF9800',
-        'Северный' => '#9C27B0'
-    ];
+    $colors = ['Шарташ' => '#4CAF50', 'Парк Победы' => '#2196F3', 'Лесной' => '#8BC34A', 'Озёрный' => '#00BCD4', 'Центральный' => '#FF9800', 'Северный' => '#9C27B0'];
     return $colors[$parkName] ?? '#CCCCCC';
 }
 
@@ -311,9 +260,27 @@ function saveResourceIdToBitrix($pavilionId, $resourceId)
 ?>
 
 <style>
-    .sync-panel { background: #f5f5f5; border:1px solid #ddd; border-radius:8px; padding:20px; margin:20px 0; }
-    .sync-info { background:#e3f2fd; border-left:4px solid #2196f3; padding:15px; margin:20px 0; }
-    .sync-warning { background:#fff3e0; border-left:4px solid #ff9800; padding:15px; margin:20px 0; }
+    .sync-panel {
+        background: #f5f5f5;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+
+    .sync-info {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 15px;
+        margin: 20px 0;
+    }
+
+    .sync-warning {
+        background: #fff3e0;
+        border-left: 4px solid #ff9800;
+        padding: 15px;
+        margin: 20px 0;
+    }
 </style>
 
 <h1>Синхронизация с LibreBooking</h1>
@@ -322,32 +289,23 @@ function saveResourceIdToBitrix($pavilionId, $resourceId)
 $apiUrl = Option::get('avs_booking', 'api_url', '');
 $username = Option::get('avs_booking', 'api_username', '');
 $password = Option::get('avs_booking', 'api_password', '');
-if (empty($apiUrl) || empty($username) || empty($password)):
-?>
-    <div class="sync-warning">
-        <strong>⚠️ Настройки API не заполнены!</strong>
+if (empty($apiUrl) || empty($username) || empty($password)): ?>
+    <div class="sync-warning"><strong>⚠️ Настройки API не заполнены!</strong>
         <p>Заполните <strong>URL API LibreBooking</strong>, <strong>Логин</strong> и <strong>Пароль</strong> в <a href="/bitrix/admin/settings.php?mid=avs_booking&lang=ru">настройках модуля</a>.</p>
     </div>
 <?php endif; ?>
 
-<div class="sync-info">
-    <strong>ℹ️ Что делает синхронизация:</strong>
+<div class="sync-info"><strong>ℹ️ Что делает синхронизация:</strong>
     <ul>
         <li>Проверяет наличие беседки в LibreBooking по уникальному артикулу (public_id).</li>
-        <li>Если беседка существует – обновляет её параметры (вместимость, цвета, описание, цены).</li>
+        <li>Если беседка существует – обновляет её параметры.</li>
         <li>Если нет – создаёт новую, записывая артикул в public_id.</li>
         <li>Сохраняет ID ресурса в свойство LIBREBOOKING_RESOURCE_ID.</li>
     </ul>
 </div>
 
 <div class="sync-panel">
-    <form method="post">
-        <?= bitrix_sessid_post() ?>
-        <input type="hidden" name="action" value="sync_resources">
-        <input type="submit" value="Начать синхронизацию" class="adm-btn-save" 
-               onclick="return confirm('Запустить синхронизацию? Это может занять время.')"
-               <?= (empty($apiUrl) || empty($username) || empty($password)) ? 'disabled' : '' ?>>
-    </form>
+    <form method="post"><?= bitrix_sessid_post() ?><input type="hidden" name="action" value="sync_resources"><input type="submit" value="Начать синхронизацию" class="adm-btn-save" onclick="return confirm('Запустить синхронизацию? Это может занять время.')" <?= (empty($apiUrl) || empty($username) || empty($password)) ? 'disabled' : '' ?>></form>
 </div>
 
 <?php require($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/epilog_admin.php'); ?>

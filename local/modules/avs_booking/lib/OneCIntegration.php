@@ -1,19 +1,28 @@
 <?php
 
-/**
- * Файл: /local/modules/avs_booking/lib/OneCIntegration.php
- */
-
 namespace AVS\Booking;
 
+/**
+ * Класс для интеграции с 1С:УНФ
+ */
 class OneCIntegration
 {
+    /**
+     * Экспорт заказов в 1С
+     * @param array $orders
+     * @return array
+     */
     public function exportOrders($orders)
     {
         $export = new \AVSExport1C();
         return ['success' => $export->exportOrders($orders)];
     }
 
+    /**
+     * Синхронизация цен из 1С
+     * @param array $prices
+     * @return array
+     */
     public function syncPrices($prices)
     {
         if (!\Bitrix\Main\Loader::includeModule('iblock')) {
@@ -39,6 +48,9 @@ class OneCIntegration
     }
 }
 
+/**
+ * Класс для экспорта заказов в 1С
+ */
 class AVSExport1C
 {
     private $exportUrl;
@@ -50,6 +62,11 @@ class AVSExport1C
         $this->apiKey = \Bitrix\Main\Config\Option::get('avs_booking', 'api_key', '');
     }
 
+    /**
+     * Экспорт одного заказа
+     * @param int $orderId
+     * @return bool
+     */
     public function exportOrder($orderId)
     {
         $order = \AVS\Booking\Order::get($orderId);
@@ -73,6 +90,11 @@ class AVSExport1C
         return $this->sendTo1C($exportData);
     }
 
+    /**
+     * Экспорт нескольких заказов
+     * @param array $orders
+     * @return bool
+     */
     public function exportOrders($orders)
     {
         $exportData = [
@@ -100,6 +122,11 @@ class AVSExport1C
         return $this->sendTo1C($exportData);
     }
 
+    /**
+     * Отправка данных в 1С
+     * @param array $data
+     * @return bool
+     */
     private function sendTo1C($data)
     {
         if (!$this->exportUrl) return false;

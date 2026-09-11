@@ -1,148 +1,148 @@
 .avs-booking-form {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
-    background: #f9f9f9;
-    border-radius: 8px;
-    font-family: Arial, sans-serif;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  font-family: Arial, sans-serif;
 }
 .avs-booking-form h2 {
-    margin-top: 0;
-    margin-bottom: 20px;
-    color: #333;
-    text-align: center;
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #333;
+  text-align: center;
 }
 .work-hours-info {
-    background: #e3f2fd;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-    text-align: center;
-    font-size: 14px;
+  background: #e3f2fd;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 14px;
 }
 .form-group {
-    margin-bottom: 15px;
+  margin-bottom: 15px;
 }
 .form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: #555;
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #555;
 }
 .form-group input,
 .form-group select,
 .form-group textarea {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    box-sizing: border-box;
-    transition: border-color 0.3s;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.3s;
 }
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-    border-color: #4CAF50;
-    outline: none;
+  border-color: #4caf50;
+  outline: none;
 }
 .form-group select:disabled {
-    background-color: #f5f5f5;
-    color: #999;
-    cursor: not-allowed;
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
 }
 .discount-wrapper {
-    display: flex;
-    gap: 10px;
+  display: flex;
+  gap: 10px;
 }
 .discount-wrapper input {
-    flex: 1;
+  flex: 1;
 }
 .btn-submit {
-    background: #4CAF50;
-    color: white;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    width: 100%;
-    transition: background 0.3s;
+  background: #4caf50;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  width: 100%;
+  transition: background 0.3s;
 }
 .btn-submit:hover {
-    background: #45a049;
+  background: #45a049;
 }
 .btn-small {
-    background: #2196f3;
-    color: white;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-    white-space: nowrap;
+  background: #2196f3;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
 }
 .btn-small:hover {
-    background: #1976d2;
+  background: #1976d2;
 }
 .avs-booking-errors {
-    margin-bottom: 20px;
-    padding: 10px 15px;
-    background: #ffebee;
-    border-radius: 4px;
-    border-left: 4px solid #c62828;
+  margin-bottom: 20px;
+  padding: 10px 15px;
+  background: #ffebee;
+  border-radius: 4px;
+  border-left: 4px solid #c62828;
 }
 .error-message {
-    color: #c62828;
-    margin-bottom: 5px;
+  color: #c62828;
+  margin-bottom: 5px;
 }
 .price-preview {
-    margin-top: 20px;
-    padding: 12px;
-    background: #e8f5e9;
-    border-radius: 4px;
-    text-align: center;
+  margin-top: 20px;
+  padding: 12px;
+  background: #e8f5e9;
+  border-radius: 4px;
+  text-align: center;
 }
 .price-preview .price-value {
-    font-size: 24px;
-    font-weight: bold;
-    color: #2e7d32;
+  font-size: 24px;
+  font-weight: bold;
+  color: #2e7d32;
 }
 .price-preview .deposit-info {
-    margin-top: 5px;
-    color: #666;
-    font-size: 14px;
+  margin-top: 5px;
+  color: #666;
+  font-size: 14px;
 }
 .price-preview .discount-info {
-    margin-top: 5px;
-    color: #ff9800;
-    font-size: 14px;
+  margin-top: 5px;
+  color: #ff9800;
+  font-size: 14px;
 }
 .hourly-fields {
-    display: none;
+  display: none;
 }
 .form-group small {
-    display: block;
-    margin-top: 5px;
-    color: #999;
-    font-size: 12px;
+  display: block;
+  margin-top: 5px;
+  color: #999;
+  font-size: 12px;
 }
 .restriction-note {
-    background: #fff3e0;
-    padding: 8px;
-    margin-bottom: 15px;
-    border-radius: 4px;
-    color: #ff9800;
-    font-size: 13px;
+  background: #fff3e0;
+  padding: 8px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  color: #ff9800;
+  font-size: 13px;
 }
 @media (max-width: 480px) {
-    .avs-booking-form {
-        padding: 15px;
-    }
-    .discount-wrapper {
-        flex-direction: column;
-    }
-    .btn-small {
-        width: 100%;
-    }
+  .avs-booking-form {
+    padding: 15px;
+  }
+  .discount-wrapper {
+    flex-direction: column;
+  }
+  .btn-small {
+    width: 100%;
+  }
 }

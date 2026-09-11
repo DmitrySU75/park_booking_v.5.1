@@ -1,10 +1,5 @@
 <?php
 
-/**
- * Файл: /local/modules/avs_booking/install/index.php
- * Установщик модуля
- */
-
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\EventManager;
 use Bitrix\Main\ModuleManager;
@@ -45,7 +40,6 @@ class avs_booking extends CModule
         $this->InstallOptions();
 
         ModuleManager::registerModule($this->MODULE_ID);
-
         return true;
     }
 
@@ -65,14 +59,12 @@ class avs_booking extends CModule
         $this->UnInstallOptions();
 
         ModuleManager::unRegisterModule($this->MODULE_ID);
-
         return true;
     }
 
     public function InstallDB()
     {
         global $DB;
-
         $DB->Query("SET NAMES 'utf8'");
         $DB->Query("SET CHARACTER SET utf8");
 
@@ -99,7 +91,6 @@ class avs_booking extends CModule
                 'DESCRIPTION' => '#ORDER_NUMBER# - Номер заказа<br>#CLIENT_NAME# - Имя клиента<br>#PAVILION_NAME# - Беседка<br>#START_TIME# - Начало<br>#END_TIME# - Конец<br>#PRICE# - Сумма'
             ]
         ];
-
         foreach ($eventTypes as $eventName => $data) {
             \CEventType::Add([
                 'LID' => 'ru',
@@ -108,7 +99,6 @@ class avs_booking extends CModule
                 'DESCRIPTION' => $data['DESCRIPTION']
             ]);
         }
-
         return true;
     }
 
@@ -119,18 +109,10 @@ class avs_booking extends CModule
         if (!empty($errors)) {
             return $errors;
         }
-
-        $eventTypes = [
-            'AVS_BOOKING_NEW_ORDER',
-            'AVS_BOOKING_PAYMENT_SUCCESS',
-            'AVS_BOOKING_REMINDER',
-            'AVS_BOOKING_CONFIRMATION'
-        ];
-
+        $eventTypes = ['AVS_BOOKING_NEW_ORDER', 'AVS_BOOKING_PAYMENT_SUCCESS', 'AVS_BOOKING_REMINDER', 'AVS_BOOKING_CONFIRMATION'];
         foreach ($eventTypes as $eventName) {
             \CEventType::Delete($eventName);
         }
-
         return true;
     }
 
@@ -159,7 +141,17 @@ class avs_booking extends CModule
 
     public function UnInstallFiles()
     {
-        DeleteDirFiles($_SERVER['DOCUMENT_ROOT'] . '/local/modules/avs_booking/admin', $_SERVER['DOCUMENT_ROOT'] . '/bitrix/admin');
+        $filesToDelete = [
+            'avs_booking_dashboard.php',
+            'avs_booking_orders.php',
+            'avs_booking_special_dates.php',
+            'avs_booking_discounts.php',
+            'avs_booking_sync.php'
+        ];
+        foreach ($filesToDelete as $file) {
+            @unlink($_SERVER['DOCUMENT_ROOT'] . '/bitrix/admin/' . $file);
+        }
+        DeleteDirFilesEx('/bitrix/components/avs_booking');
         return true;
     }
 
